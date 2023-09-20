@@ -1,0 +1,7 @@
+# Use vernemq/vernemq as the base image
+FROM vernemq/vernemq
+
+# Copy the mysql.lua script into the image
+COPY ./vernemq/mysql.lua /vernemq/share/lua/auth/mysql.lua
+
+COPY ./vernemq/postgres_cockroach_commons.lua /vernemq/share/lua/auth/postgres_cockroach_commons.lua

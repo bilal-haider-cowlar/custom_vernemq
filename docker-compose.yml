@@ -1,0 +1,69 @@
+version: "3"
+services:
+
+  # adminer:
+  #   image: adminer:4.8.1
+  #   container_name: iotcore.adminer-db
+  #   restart: always
+  #   ports:
+  #     - ${ADMINER_PORT}:8080
+  #   networks:
+  #     - vernemq-network
+
+  # mysql_nest:
+  #   image: mysql
+  #   container_name: mysql_nest
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root_password
+  #     MYSQL_DATABASE: ${DATABASE_DB}
+  #     MYSQL_USER: ${DATABASE_USER}
+  #     MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+  #   ports:
+  #     - ${DATABASE_PORT}:3306
+  #   volumes:
+  #     - ./amysql-nest:/var/lib/mysql
+  #     - ./my.cnf:/etc/mysql/my.cnf
+  #   # healthcheck:
+  #   #   test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #   #   timeout: 10s
+  #   #   retries: 10
+  #   networks:
+  #     - vernemq-network
+
+      
+  vernemq:
+    # image: vernemq/vernemq
+    build: 
+      context: .
+    container_name: vernemq
+    restart: always
+    environment:
+      DOCKER_VERNEMQ_ALLOW_ANONYMOUS: 'off'
+      DOCKER_VERNEMQ_PLUGINS.vmq_diversity: 'on'
+      DOCKER_VERNEMQ_PLUGINS.vmq_passwd: 'off'
+      DOCKER_VERNEMQ_PLUGINS.vmq_acl: 'off'
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.auth_mysql.enabled: 'on'
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.host: mysql_nest
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.port: $DATABASE_PORT
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.user: $DATABASE_USER
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.password: $DATABASE_PASSWORD
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.database: $DATABASE_DB
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.password_hash_method: 'sha256'
+      DOCKER_VERNEMQ_ACCEPT_EULA: 'yes'
+      # DATABASE_CLIENT_ID_MATCH: 'off'
+      # API_KEY: 'cowlarBrokerKey'
+
+    ports:
+      - $MQTT_MQTT_PORT:1883
+      - $MQTT_WS_PORT:8080
+      - $MQTT_ADMIN_PORT:8888
+
+    networks:
+      - vernemq-network
+    # depends_on:
+    #   mysql_nest:
+    #     condition: service_healthy
+networks:
+  vernemq-network:
+    name: vernemq-network
